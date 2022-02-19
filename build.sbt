@@ -21,5 +21,3 @@ scalacOptions ++= Seq(
   "-deprecation",
   "-Xfatal-warnings"
 )
-
-herokuAppName in Compile := "dsek-queue"
