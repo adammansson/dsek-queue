@@ -20,7 +20,7 @@ object OrderResource {
 
 
 /**
-  * Controls access to the backend data, returning [[QueueResource]]
+  * Controls access to the backend data, returning [[OrderResource]]
   */
 class OrderResourceHandler @Inject()(
                                      routerProvider: Provider[QueueRouter],
