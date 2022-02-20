@@ -1,4 +1,4 @@
-import api.{QueueRepository, QueueRepositoryImpl}
+import api.{OrderRepository, OrderRepositoryImpl}
 
 import javax.inject._
 import com.google.inject.AbstractModule
@@ -15,7 +15,7 @@ class Module(environment: Environment, configuration: Configuration)
     with ScalaModule {
 
   override def configure() = {
-    bind[QueueRepository].to[QueueRepositoryImpl].in[Singleton]()
+    bind[OrderRepository].to[OrderRepositoryImpl].in[Singleton]()
   }
 }
 

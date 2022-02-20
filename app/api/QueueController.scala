@@ -8,7 +8,7 @@ import play.api.mvc._
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-case class QueueFormInput(title: String, body: String)
+case class OrderFormInput(title: String, body: String)
 
 /**
   * Takes HTTP requests and produces JSON.
@@ -19,20 +19,20 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
 
   private val logger = Logger(getClass)
 
-  private val form: Form[QueueFormInput] = {
+  private val form: Form[OrderFormInput] = {
     import play.api.data.Forms._
 
     Form(
       mapping(
         "title" -> nonEmptyText,
         "body" -> text
-      )(QueueFormInput.apply)(QueueFormInput.unapply)
+      )(OrderFormInput.apply)(OrderFormInput.unapply)
     )
   }
 
   def index: Action[AnyContent] = QueueAction.async { implicit request =>
     logger.trace("index: ")
-    QueueResourceHandler.find.map { Queues =>
+    orderResourceHandler.find.map { Queues =>
       Ok(Json.toJson(Queues))
     }
   }
@@ -45,20 +45,20 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
   def show(id: String): Action[AnyContent] = QueueAction.async {
     implicit request =>
       logger.trace(s"show: id = $id")
-      QueueResourceHandler.lookup(id).map { Queue =>
+      orderResourceHandler.lookup(id).map { Queue =>
         Ok(Json.toJson(Queue))
       }
   }
 
   private def processJsonQueue[A]()(
       implicit request: QueueRequest[A]): Future[Result] = {
-    def failure(badForm: Form[QueueFormInput]) = {
+    def failure(badForm: Form[OrderFormInput]) = {
       Future.successful(BadRequest(badForm.errorsAsJson))
     }
 
-    def success(input: QueueFormInput) = {
-      QueueResourceHandler.create(input).map { Queue =>
-        Created(Json.toJson(Queue)).withHeaders(LOCATION -> Queue.link)
+    def success(input: OrderFormInput) = {
+      orderResourceHandler.create(input).map { order =>
+        Created(Json.toJson(order)).withHeaders(LOCATION -> order.link)
       }
     }
 

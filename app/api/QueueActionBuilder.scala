@@ -91,8 +91,8 @@ class QueueActionBuilder @Inject()(messagesApi: MessagesApi,
   * controller only has to have one thing injected.
   */
 case class QueueControllerComponents @Inject()(
-    QueueActionBuilder: QueueActionBuilder,
-    QueueResourceHandler: QueueResourceHandler,
+    queueActionBuilder: QueueActionBuilder,
+    orderResourceHandler: OrderResourceHandler,
     actionBuilder: DefaultActionBuilder,
     parsers: PlayBodyParsers,
     messagesApi: MessagesApi,
@@ -104,12 +104,12 @@ case class QueueControllerComponents @Inject()(
 /**
   * Exposes actions and handler to the api.QueueController by wiring the injected state into the base class.
   */
-class QueueBaseController @Inject()(pcc: QueueControllerComponents)
+class QueueBaseController @Inject()(qcc: QueueControllerComponents)
     extends BaseController
     with RequestMarkerContext {
-  override protected def controllerComponents: ControllerComponents = pcc
+  override protected def controllerComponents: ControllerComponents = qcc
 
-  def QueueAction: QueueActionBuilder = pcc.QueueActionBuilder
+  def QueueAction: QueueActionBuilder = qcc.queueActionBuilder
 
-  def QueueResourceHandler: QueueResourceHandler = pcc.QueueResourceHandler
+  def orderResourceHandler: OrderResourceHandler = qcc.orderResourceHandler
 }

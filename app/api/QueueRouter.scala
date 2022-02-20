@@ -12,7 +12,7 @@ import javax.inject.Inject
 class QueueRouter @Inject()(controller: QueueController) extends SimpleRouter {
   val prefix = "/api"
 
-  def link(id: QueueId): String = {
+  def link(id: OrderId): String = {
     import io.lemonlabs.uri.dsl._
     val url = prefix / id.toString
     url.toString()
