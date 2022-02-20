@@ -5,11 +5,12 @@ import play.api.libs.json._
 
 import javax.inject.{Inject, Provider}
 import scala.concurrent.{ExecutionContext, Future}
+import java.time.Instant
 
 /**
   * DTO for displaying order information.
   */
-case class OrderResource(id: String, link: String, title: String, body: String)
+case class OrderResource(id: String, content: String, timePlaced: String)
 
 object OrderResource {
   /**
@@ -28,8 +29,8 @@ class OrderResourceHandler @Inject()(
 
   def create(orderInput: OrderFormInput)(
       implicit mc: MarkerContext): Future[OrderResource] = {
-    val data = OrderData(OrderId("999"), orderInput.title, orderInput.body)
-    // We don't actually create the Queue, so return what we have
+    val data = OrderData(OrderId(), orderInput.content, Instant.now().getEpochSecond())
+    // We don't actually create the order, so return what we have
     orderRepository.create(data).map { id =>
       createOrderResource(data)
     }
@@ -52,7 +53,7 @@ class OrderResourceHandler @Inject()(
   }
 
   private def createOrderResource(p: OrderData): OrderResource = {
-    OrderResource(p.id.toString, routerProvider.get.link(p.id), p.title, p.body)
+    OrderResource(p.id.toString, p.content, p.timePlaced.toString)
   }
 
 }

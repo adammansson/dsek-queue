@@ -6,17 +6,28 @@ import play.api.{Logger, MarkerContext}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
+import java.time.Instant
+import scala.collection.mutable.ListBuffer
 
-final case class OrderData(id: OrderId, title: String, body: String)
+/**
+ * The class representing an order.
+ */
+final case class OrderData(id: OrderId, content: String, timePlaced: Long)
 
 class OrderId private (val underlying: Int) extends AnyVal {
   override def toString: String = underlying.toString
 }
 
 object OrderId {
-  def apply(raw: String): OrderId = {
-    require(raw != null)
-    new OrderId(Integer.parseInt(raw))
+  private var counter = -1
+
+  def apply(): OrderId = {
+    counter += 1
+    new OrderId(counter)
+  }
+
+  def apply(id: String): OrderId = {
+    new OrderId(Integer.parseInt(id))
   }
 }
 
@@ -47,18 +58,18 @@ class OrderRepositoryImpl @Inject()()(implicit ec: QueueExecutionContext)
 
   private val logger = Logger(this.getClass)
 
-  private val OrderList = List(
-    OrderData(OrderId("0"), "order 0", "dboll"),
-    OrderData(OrderId("1"), "order 1", "macka"),
-    OrderData(OrderId("2"), "order 2", "pölse"),
-    OrderData(OrderId("3"), "order 3", "")
+  private val orderList = ListBuffer(
+    OrderData(OrderId(), "dboll", Instant.now().getEpochSecond()),
+    OrderData(OrderId(), "macka", Instant.now().getEpochSecond()),
+    OrderData(OrderId(), "pölse", Instant.now().getEpochSecond()),
+    OrderData(OrderId(), "matlåda", Instant.now().getEpochSecond())
   )
 
   override def list()(
       implicit mc: MarkerContext): Future[Iterable[OrderData]] = {
     Future {
       logger.trace(s"list: ")
-      OrderList
+      orderList
     }
   }
 
@@ -66,15 +77,16 @@ class OrderRepositoryImpl @Inject()()(implicit ec: QueueExecutionContext)
       implicit mc: MarkerContext): Future[Option[OrderData]] = {
     Future {
       logger.trace(s"get: id = $id")
-      OrderList.find(order => order.id == id)
+      orderList.find(order => order.id == id)
     }
   }
 
   def create(data: OrderData)(implicit mc: MarkerContext): Future[OrderId] = {
     Future {
+      orderList += data
+
       logger.trace(s"create: data = $data")
       data.id
     }
   }
-
 }

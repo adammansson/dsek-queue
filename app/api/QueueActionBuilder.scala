@@ -41,7 +41,6 @@ trait RequestMarkerContext {
         "remoteAddress" -> request.remoteAddress)
     }
   }
-
 }
 
 /**

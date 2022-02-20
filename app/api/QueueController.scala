@@ -8,7 +8,7 @@ import play.api.mvc._
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-case class OrderFormInput(title: String, body: String)
+case class OrderFormInput(content: String)
 
 /**
   * Takes HTTP requests and produces JSON.
@@ -24,16 +24,15 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
 
     Form(
       mapping(
-        "title" -> nonEmptyText,
-        "body" -> text
+        "content" -> nonEmptyText
       )(OrderFormInput.apply)(OrderFormInput.unapply)
     )
   }
 
   def index: Action[AnyContent] = QueueAction.async { implicit request =>
     logger.trace("index: ")
-    orderResourceHandler.find.map { Queues =>
-      Ok(Json.toJson(Queues))
+    orderResourceHandler.find.map { queue =>
+      Ok(Json.toJson(queue))
     }
   }
 
@@ -58,7 +57,7 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
 
     def success(input: OrderFormInput) = {
       orderResourceHandler.create(input).map { order =>
-        Created(Json.toJson(order)).withHeaders(LOCATION -> order.link)
+        Created(Json.toJson(order))
       }
     }
 
