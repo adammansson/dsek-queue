@@ -12,7 +12,7 @@ import scala.collection.mutable.ListBuffer
 /**
  * The class representing an order.
  */
-final case class OrderData(id: OrderId, content: String, timePlaced: Long)
+final case class OrderData(id: OrderId, content: String, timePlaced: Long, isDone: Boolean)
 
 class OrderId private (val underlying: Int) extends AnyVal {
   override def toString: String = underlying.toString
@@ -43,6 +43,10 @@ trait OrderRepository {
   def list()(implicit mc: MarkerContext): Future[Iterable[OrderData]]
 
   def get(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderData]]
+
+  def markDone(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderId]]
+
+  def delete(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderId]]
 }
 
 /**
@@ -59,10 +63,10 @@ class OrderRepositoryImpl @Inject()()(implicit ec: QueueExecutionContext)
   private val logger = Logger(this.getClass)
 
   private val orderList = ListBuffer(
-    OrderData(OrderId(), "dboll", Instant.now().getEpochSecond()),
-    OrderData(OrderId(), "macka", Instant.now().getEpochSecond()),
-    OrderData(OrderId(), "pölse", Instant.now().getEpochSecond()),
-    OrderData(OrderId(), "matlåda", Instant.now().getEpochSecond())
+    OrderData(OrderId(), "dboll", Instant.now().getEpochSecond(), false),
+    OrderData(OrderId(), "macka", Instant.now().getEpochSecond(), false),
+    OrderData(OrderId(), "pölse", Instant.now().getEpochSecond(), false),
+    OrderData(OrderId(), "matlåda", Instant.now().getEpochSecond(), false)
   )
 
   override def list()(
@@ -78,6 +82,29 @@ class OrderRepositoryImpl @Inject()()(implicit ec: QueueExecutionContext)
     Future {
       logger.trace(s"get: id = $id")
       orderList.find(order => order.id == id)
+    }
+  }
+
+  override def markDone(id: OrderId)(
+    implicit mc: MarkerContext): Future[Option[OrderId]] = {
+    Future {
+      logger.trace(s"markDone: id = $id")
+      orderList.find(order => order.id == id).map { maybeOrderData =>
+        orderList -= maybeOrderData
+        orderList += maybeOrderData.copy(isDone=true)
+        id
+      }
+    }
+  }
+
+  override def delete(id: OrderId)(
+    implicit mc: MarkerContext): Future[Option[OrderId]] = {
+    Future {
+      logger.trace(s"delete: id = $id")
+      orderList.find(order => order.id == id).map { maybeOrderData =>
+        orderList -= maybeOrderData
+        id
+      }
     }
   }
 

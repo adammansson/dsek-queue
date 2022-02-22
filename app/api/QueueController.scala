@@ -44,8 +44,24 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
   def show(id: String): Action[AnyContent] = QueueAction.async {
     implicit request =>
       logger.trace(s"show: id = $id")
-      orderResourceHandler.lookup(id).map { Queue =>
-        Ok(Json.toJson(Queue))
+      orderResourceHandler.lookup(id).map { order =>
+        Ok(Json.toJson(order))
+      }
+  }
+
+  def markDone(id: String): Action[AnyContent] = QueueAction.async {
+    implicit request =>
+      logger.trace(s"markDone: id = $id")
+      orderResourceHandler.markDone(id).map { order =>
+        Ok(Json.toJson(order))
+      }
+  }
+
+  def delete(id: String): Action[AnyContent] = QueueAction.async {
+    implicit request =>
+      logger.trace(s"delete: id = $id")
+      orderResourceHandler.delete(id).map { order =>
+        Ok(Json.toJson(order))
       }
   }
 

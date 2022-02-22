@@ -10,7 +10,7 @@ import java.time.Instant
 /**
   * DTO for displaying order information.
   */
-case class OrderResource(id: String, content: String, timePlaced: String)
+case class OrderResource(id: String, content: String, timePlaced: String, isDone: String)
 
 object OrderResource {
   /**
@@ -29,11 +29,25 @@ class OrderResourceHandler @Inject()(
 
   def create(orderInput: OrderFormInput)(
       implicit mc: MarkerContext): Future[OrderResource] = {
-    val data = OrderData(OrderId(), orderInput.content, Instant.now().getEpochSecond())
+    val data = OrderData(OrderId(), orderInput.content, Instant.now().getEpochSecond(), false)
     // We don't actually create the order here, so return what we have
     orderRepository.create(data).map { id =>
       createOrderResource(data)
     }
+  }
+
+  def markDone(id: String)(
+    implicit mc: MarkerContext): Future[Option[OrderResource]] = {
+    orderRepository.markDone(OrderId(id))
+    lookup(id)
+  }
+
+  def delete(id: String)(
+    implicit mc: MarkerContext): Future[Option[OrderResource]] = {
+    val temp = lookup(id)
+    orderRepository.delete(OrderId(id))
+    temp
+
   }
 
   def lookup(id: String)(
@@ -53,6 +67,6 @@ class OrderResourceHandler @Inject()(
   }
 
   private def createOrderResource(p: OrderData): OrderResource = {
-    OrderResource(p.id.toString, p.content, p.timePlaced.toString)
+    OrderResource(p.id.toString, p.content, p.timePlaced.toString, p.isDone.toString)
   }
 }
