@@ -5,6 +5,7 @@ Ett kösystem för pubbar som är tänkt att ersätta D-sektionens befintliga sy
 ### Running
 
 You need to download and install sbt for this application to run.
+You also need to be using Java 11.
 
 Once you have sbt installed, the following at the command prompt will start up Play in development mode:
 
