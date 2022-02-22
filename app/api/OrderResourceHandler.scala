@@ -10,7 +10,7 @@ import java.time.Instant
 /**
   * DTO for displaying order information.
   */
-case class OrderResource(id: String, content: String, timePlaced: String, isDone: String)
+case class OrderResource(id: Int, content: String, timePlaced: Long, isDone: Boolean)
 
 object OrderResource {
   /**
@@ -67,6 +67,6 @@ class OrderResourceHandler @Inject()(
   }
 
   private def createOrderResource(p: OrderData): OrderResource = {
-    OrderResource(p.id.toString, p.content, p.timePlaced.toString, p.isDone.toString)
+    OrderResource(p.id.underlying, p.content, p.timePlaced, p.isDone)
   }
 }
