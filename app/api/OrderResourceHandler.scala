@@ -30,7 +30,7 @@ class OrderResourceHandler @Inject()(
   def create(orderInput: OrderFormInput)(
       implicit mc: MarkerContext): Future[OrderResource] = {
     val data = OrderData(OrderId(), orderInput.content, Instant.now().getEpochSecond())
-    // We don't actually create the order, so return what we have
+    // We don't actually create the order here, so return what we have
     orderRepository.create(data).map { id =>
       createOrderResource(data)
     }
@@ -55,5 +55,4 @@ class OrderResourceHandler @Inject()(
   private def createOrderResource(p: OrderData): OrderResource = {
     OrderResource(p.id.toString, p.content, p.timePlaced.toString)
   }
-
 }
