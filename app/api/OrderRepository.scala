@@ -40,9 +40,9 @@ class QueueExecutionContext @Inject()(actorSystem: ActorSystem)
 trait OrderRepository {
   def create(data: OrderData)(implicit mc: MarkerContext): Future[OrderId]
 
-  def list()(implicit mc: MarkerContext): Future[Iterable[OrderData]]
-
   def get(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderData]]
+
+  def list()(implicit mc: MarkerContext): Future[Iterable[OrderData]]
 
   def markDone(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderId]]
 
@@ -69,19 +69,19 @@ class OrderRepositoryImpl @Inject()()(implicit ec: QueueExecutionContext)
     OrderData(OrderId(), "matlåda", Instant.now().getEpochSecond(), false)
   )
 
+  override def get(id: OrderId)(
+    implicit mc: MarkerContext): Future[Option[OrderData]] = {
+    Future {
+      logger.trace(s"get: id = $id")
+      orderList.find(order => order.id == id)
+    }
+  }
+
   override def list()(
       implicit mc: MarkerContext): Future[Iterable[OrderData]] = {
     Future {
       logger.trace(s"list: ")
       orderList
-    }
-  }
-
-  override def get(id: OrderId)(
-      implicit mc: MarkerContext): Future[Option[OrderData]] = {
-    Future {
-      logger.trace(s"get: id = $id")
-      orderList.find(order => order.id == id)
     }
   }
 
