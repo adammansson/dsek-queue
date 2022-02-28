@@ -10,7 +10,7 @@ import java.time.Instant
 /**
   * DTO for displaying order information.
   */
-case class OrderResource(id: Int, content: String, timePlaced: Long, isDone: Boolean)
+final case class OrderResource(id: Int, content: String, timePlaced: Long, isDone: Boolean)
 
 object OrderResource {
   /**
@@ -30,28 +30,13 @@ class OrderResourceHandler @Inject()(
   def create(orderInput: OrderFormInput)(
       implicit mc: MarkerContext): Future[OrderResource] = {
     val data = OrderData(OrderId(), orderInput.content, Instant.now().getEpochSecond(), false)
-    // We don't actually create the order here, so return what we have
     orderRepository.create(data).map { id =>
       createOrderResource(data)
     }
   }
 
-  def markDone(id: String)(
-    implicit mc: MarkerContext): Future[Option[OrderResource]] = {
-    orderRepository.markDone(OrderId(id))
-    lookup(id)
-  }
-
-  def delete(id: String)(
-    implicit mc: MarkerContext): Future[Option[OrderResource]] = {
-    val temp = lookup(id)
-    orderRepository.delete(OrderId(id))
-    temp
-
-  }
-
   def lookup(id: String)(
-      implicit mc: MarkerContext): Future[Option[OrderResource]] = {
+    implicit mc: MarkerContext): Future[Option[OrderResource]] = {
     val orderFuture = orderRepository.get(OrderId(id))
     orderFuture.map { maybeOrderData =>
       maybeOrderData.map { orderData =>
@@ -60,9 +45,39 @@ class OrderResourceHandler @Inject()(
     }
   }
 
-  def find(implicit mc: MarkerContext): Future[Iterable[OrderResource]] = {
+  def showAll(implicit mc: MarkerContext): Future[Iterable[OrderResource]] = {
     orderRepository.list().map { orderDataList =>
       orderDataList.map(orderData => createOrderResource(orderData))
+    }
+  }
+
+  def update(id: String, orderInput: OrderFormInput)(
+    implicit mc: MarkerContext): Future[Option[OrderResource]] = {
+    val orderFuture = orderRepository.update(OrderId(id), orderInput.content)
+    orderFuture.map { maybeOrderData =>
+      maybeOrderData.map { orderData =>
+        createOrderResource(orderData)
+      }
+    }
+  }
+
+  def markDone(id: String)(
+    implicit mc: MarkerContext): Future[Option[OrderResource]] = {
+    val orderFuture = orderRepository.markDone(OrderId(id))
+    orderFuture.map { maybeOrderData =>
+      maybeOrderData.map { orderData =>
+        createOrderResource(orderData)
+      }
+    }
+  }
+
+  def delete(id: String)(
+    implicit mc: MarkerContext): Future[Option[OrderResource]] = {
+    val orderFuture = orderRepository.delete(OrderId(id))
+    orderFuture.map { maybeOrderData =>
+      maybeOrderData.map { orderData =>
+        createOrderResource(orderData)
+      }
     }
   }
 

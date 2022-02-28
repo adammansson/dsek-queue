@@ -8,7 +8,7 @@ import play.api.mvc._
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-case class OrderFormInput(content: String)
+final case class OrderFormInput(content: String)
 
 /**
   * Takes HTTP requests and produces JSON.
@@ -31,14 +31,14 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
 
   def index: Action[AnyContent] = QueueAction.async { implicit request =>
     logger.trace("index: ")
-    orderResourceHandler.find.map { queue =>
+    orderResourceHandler.showAll.map { queue =>
       Ok(Json.toJson(queue))
     }
   }
 
-  def process: Action[AnyContent] = QueueAction.async { implicit request =>
+  def processCreate: Action[AnyContent] = QueueAction.async { implicit request =>
     logger.trace("process: ")
-    processJsonQueue()
+    processCreateOrder()
   }
 
   def show(id: String): Action[AnyContent] = QueueAction.async {
@@ -47,6 +47,11 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
       orderResourceHandler.lookup(id).map { order =>
         Ok(Json.toJson(order))
       }
+  }
+
+  def processUpdate(id: String): Action[AnyContent] = QueueAction.async { implicit request =>
+    logger.trace("process: ")
+    processUpdateOrder(id)
   }
 
   def markDone(id: String): Action[AnyContent] = QueueAction.async {
@@ -65,7 +70,7 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
       }
   }
 
-  private def processJsonQueue[A]()(
+  private def processCreateOrder[A]()(
       implicit request: QueueRequest[A]): Future[Result] = {
     def failure(badForm: Form[OrderFormInput]) = {
       Future.successful(BadRequest(badForm.errorsAsJson))
@@ -74,6 +79,21 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
     def success(input: OrderFormInput) = {
       orderResourceHandler.create(input).map { order =>
         Created(Json.toJson(order))
+      }
+    }
+
+    form.bindFromRequest().fold(failure, success)
+  }
+
+  private def processUpdateOrder[A](id: String)(
+    implicit request: QueueRequest[A]): Future[Result] = {
+    def failure(badForm: Form[OrderFormInput]) = {
+      Future.successful(BadRequest(badForm.errorsAsJson))
+    }
+
+    def success(input: OrderFormInput) = {
+      orderResourceHandler.update(id, input).map { order =>
+        Ok(Json.toJson(order))
       }
     }
 

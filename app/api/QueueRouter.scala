@@ -12,21 +12,18 @@ import javax.inject.Inject
 class QueueRouter @Inject()(controller: QueueController) extends SimpleRouter {
   val prefix = "/api"
 
-  def link(id: OrderId): String = {
-    import io.lemonlabs.uri.dsl._
-    val url = prefix / id.toString
-    url.toString()
-  }
-
   override def routes: Routes = {
     case GET(p"/") =>
       controller.index
 
     case POST(p"/") =>
-      controller.process
+      controller.processCreate
 
     case GET(p"/$id") =>
       controller.show(id)
+
+    case POST(p"/$id/update") =>
+      controller.processUpdate(id)
 
     case PUT(p"/$id/done") =>
       controller.markDone(id)

@@ -38,15 +38,17 @@ class QueueExecutionContext @Inject()(actorSystem: ActorSystem)
   * A pure non-blocking interface for the api.QueueRepository.
   */
 trait OrderRepository {
-  def create(data: OrderData)(implicit mc: MarkerContext): Future[OrderId]
+  def create(data: OrderData)(implicit mc: MarkerContext): Future[OrderData]
 
   def get(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderData]]
 
   def list()(implicit mc: MarkerContext): Future[Iterable[OrderData]]
 
-  def markDone(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderId]]
+  def update(id: OrderId, newContent: String)(implicit mc: MarkerContext): Future[Option[OrderData]]
 
-  def delete(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderId]]
+  def markDone(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderData]]
+
+  def delete(id: OrderId)(implicit mc: MarkerContext): Future[Option[OrderData]]
 }
 
 /**
@@ -69,6 +71,15 @@ class OrderRepositoryImpl @Inject()()(implicit ec: QueueExecutionContext)
     OrderData(OrderId(), "matlåda", Instant.now().getEpochSecond(), false)
   )
 
+  def create(data: OrderData)(implicit mc: MarkerContext): Future[OrderData] = {
+    Future {
+      orderList += data
+
+      logger.trace(s"create: data = $data")
+      data
+    }
+  }
+
   override def get(id: OrderId)(
     implicit mc: MarkerContext): Future[Option[OrderData]] = {
     Future {
@@ -85,35 +96,41 @@ class OrderRepositoryImpl @Inject()()(implicit ec: QueueExecutionContext)
     }
   }
 
+  override def update(id: OrderId, newContent: String)(
+    implicit mc: MarkerContext): Future[Option[OrderData]] = {
+    Future {
+      logger.trace(s"update: id = $id")
+      orderList.find(order => order.id == id).map { maybeOrderData =>
+        orderList -= maybeOrderData
+        val toBeAdded = maybeOrderData.copy(content=newContent)
+        orderList += toBeAdded
+        toBeAdded
+      }
+    }
+  }
+
   override def markDone(id: OrderId)(
-    implicit mc: MarkerContext): Future[Option[OrderId]] = {
+    implicit mc: MarkerContext): Future[Option[OrderData]] = {
     Future {
       logger.trace(s"markDone: id = $id")
       orderList.find(order => order.id == id).map { maybeOrderData =>
         orderList -= maybeOrderData
-        orderList += maybeOrderData.copy(isDone=true)
-        id
+        val toBeAdded = maybeOrderData.copy(isDone=true)
+        orderList += toBeAdded
+        toBeAdded
       }
     }
   }
 
   override def delete(id: OrderId)(
-    implicit mc: MarkerContext): Future[Option[OrderId]] = {
+    implicit mc: MarkerContext): Future[Option[OrderData]] = {
     Future {
       logger.trace(s"delete: id = $id")
       orderList.find(order => order.id == id).map { maybeOrderData =>
-        orderList -= maybeOrderData
-        id
+        val toBeDeleted = maybeOrderData
+        orderList -= toBeDeleted
+        toBeDeleted
       }
-    }
-  }
-
-  def create(data: OrderData)(implicit mc: MarkerContext): Future[OrderId] = {
-    Future {
-      orderList += data
-
-      logger.trace(s"create: data = $data")
-      data.id
     }
   }
 }
