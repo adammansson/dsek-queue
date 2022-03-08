@@ -24,7 +24,7 @@ class QueueController @Inject()(cc: QueueControllerComponents)(
 
     Form(
       mapping(
-        "content" -> nonEmptyText
+        "content" -> text
       )(OrderFormInput.apply)(OrderFormInput.unapply)
     )
   }

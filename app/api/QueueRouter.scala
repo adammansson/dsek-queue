@@ -22,7 +22,7 @@ class QueueRouter @Inject()(controller: QueueController) extends SimpleRouter {
     case GET(p"/$id") =>
       controller.show(id)
 
-    case POST(p"/$id/update") =>
+    case PUT(p"/$id/update") =>
       controller.processUpdate(id)
 
     case PUT(p"/$id/done") =>
